@@ -44,7 +44,7 @@ class class_minecraft():
             minecraft_launcher_lib.forge.install_forge_version(forge_version, self.minecraft_directory, callback)
             self.settings.download_mine = True
             with open("settings.json", 'w', encoding='utf-8') as file:
-                file.write(self.settings.json())
+                file.write(self.settings.model_dump_json())
             return Ok(None)
         except Exception as e:
             return Err(e)

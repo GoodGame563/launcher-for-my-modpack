@@ -24,8 +24,8 @@ current_max = 0
 setting_path = "settings.json"
 def create_settings() -> Result[None, str]:
     try:
-        with open(setting_path, 'w', encoding='utf-8') as file: 
-            file.write(Settings(version='middle',nick=generate_username(1)[0], enable_resource=True, enable_custom_settings=False, download_mine=False).json())
+        with open(setting_path, 'w+', encoding='utf-8') as file: 
+            file.write(Settings(version='middle',nick=generate_username(1)[0], enable_resource=True, enable_custom_settings=False, download_mine=False).model_dump_json())
         return Ok(None)    
     except Exception as e:
         return Err(f"Ошибка создания файла настроек: {e}")
@@ -33,7 +33,7 @@ def create_settings() -> Result[None, str]:
 def check_settings() -> Result[Settings, str]:
     if not os.path.exists(setting_path):
         if create_settings().is_err():
-            assert()
+            showerror("dasasda", "dasjhdkjas")
     with open(setting_path, 'r', encoding='utf-8') as file:
         try: 
             return Ok(Settings(**json.load(file))) 
@@ -62,7 +62,7 @@ class App(customtkinter.CTk):
         self.settings = data.ok_value
         self.versions = ["potato", "potato-ru", "middle-ru", "middle", "beautiful-ru", "beatiful"]
 
-        self.title("CustomTkinter complex_example.py")
+        self.title("Лаунчер")
         self.geometry(f"{1100}x{580}")
 
         self.grid_columnconfigure(1, weight=1)
@@ -71,14 +71,20 @@ class App(customtkinter.CTk):
 
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=5, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(4, weight=1)
+        self.sidebar_frame.grid_rowconfigure(5, weight=1)
         self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Minecraft", font=customtkinter.CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
         self.combobox = customtkinter.CTkComboBox(self.sidebar_frame, values=self.versions, command=self.combobox_callback)
-        self.combobox.grid(row=3, column=0, padx=20, pady=10)
+        self.combobox.grid(row=4, column=0, padx=20, pady=10)
         self.combobox.set(self.settings.version)
-        self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, text='Настройки')
-        self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
+        self.checkbox_resource = customtkinter.CTkCheckBox(self.sidebar_frame, text="Локальные ресурсы", command=self.toggle_resource)
+        self.checkbox_resource.grid(row=2, column=0, padx=20, pady=(0, 10))
+        self.checkbox_custom_settings = customtkinter.CTkCheckBox(self.sidebar_frame, text="Локальные настройки", command=self.toggle_custom_settings)
+        self.checkbox_custom_settings.grid(row=3, column=0, padx=20, pady=(0, 10))
+        self.checkbox_resource.select() if self.settings.enable_resource else self.checkbox_resource.deselect()
+        self.checkbox_custom_settings.select() if self.settings.enable_custom_settings else self.checkbox_custom_settings.deselect()
+        # self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, text='Настройки')
+        # self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
 
         self.entry = customtkinter.CTkEntry(self)
         self.entry.grid(row=3, column=1, columnspan=2, padx=(20, 0), pady=(20, 20), sticky="nsew")
@@ -103,11 +109,20 @@ class App(customtkinter.CTk):
         self.progressbar_1.grid(row=2, column=0, padx=(0, 20), pady=(0, 10), sticky="ew")
         self.slider_progressbar_frame.grid_remove()
 
+    def toggle_resource(self):
+        self.settings.enable_resource = self.checkbox_resource.get() == 1
+        with open("settings.json", 'w', encoding='utf-8') as file:
+            file.write(self.settings.model_dump_json())
+
+    def toggle_custom_settings(self):
+        self.settings.enable_custom_settings = self.checkbox_custom_settings.get() == 1
+        with open("settings.json", 'w', encoding='utf-8') as file:
+            file.write(self.settings.model_dump_json())
 
     def combobox_callback(self, choice):
         self.settings.version = choice
         with open("settings.json", 'w', encoding='utf-8') as file:
-            file.write(self.settings.json())
+            file.write(self.settings.model_dump_json())
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
@@ -120,7 +135,7 @@ class App(customtkinter.CTk):
         self.main_button_1.configure(text="Запуск", state="disabled")
         self.settings.nick = self.entry.get()
         with open("settings.json", 'w', encoding='utf-8') as file:
-            file.write(self.settings.json())
+            file.write(self.settings.model_dump_json())
         Thread(target=self.start_all).start()
         
     def start_all(self):

@@ -22,7 +22,7 @@ class element_git():
         if os.path.exists(self.save_path) :
             if self.check_rep_exists():
                 branch_version = self.check_version_branch()
-                if not (branch_version == self.gq):
+                if not (branch_version.ok_value == self.gq):
                     check_branch = self.checkout_branch()
                     if check_branch.is_err:
                         return check_branch

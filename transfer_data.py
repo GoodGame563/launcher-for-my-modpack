@@ -10,7 +10,7 @@ def transfer(repo_url:str, minecraft_url:str, settings:Settings) -> Result[None,
         return Err("Ошибка при удалении папки mods")
     if delete_directory(f"{minecraft_url}\\shaderpacks").is_err():
         return Err("Ошибка при удалении папки shaderpacks")
-    if settings.enable_resource:
+    if not settings.enable_resource:
         if delete_directory(f"{minecraft_url}\\resourcepacks").is_err():
             return Err("Ошибка при удалении папки resourcepacks")
     if not settings.enable_custom_settings:
@@ -20,7 +20,7 @@ def transfer(repo_url:str, minecraft_url:str, settings:Settings) -> Result[None,
             os.remove(f"{minecraft_url}\\options.txt")
         except FileNotFoundError:
             print("Ошибка при удалении файла options.txt")
-    return copy_folder(f"{repo_url}\\.minecraft", minecraft_url)
+    return copy_folder(f"{repo_url}\\.minecraft", minecraft_url, settings.enable_custom_settings)
 
 def delete_directory(url) -> Result[None, str]:
     try:
@@ -30,8 +30,10 @@ def delete_directory(url) -> Result[None, str]:
     except Exception as e:
         return Err(e)
 
-def copy_folder(src_folder, dest_folder) -> Result[None, Exception]:
+def copy_folder(src_folder, dest_folder, no_options: bool) -> Result[None, Exception]:
     for item in os.listdir(src_folder):
+        if item == "options.txt" and no_options:
+            continue
         src_path = os.path.join(src_folder, item)
         dest_path = os.path.join(dest_folder, item)
         
