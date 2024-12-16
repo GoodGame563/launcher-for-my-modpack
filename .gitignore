@@ -1,0 +1,13 @@
+*_venv
+RPG_modpack
+logs
+.idea
+__pycache__
+config
+.mixin.out
+resourcepacks
+patchouli_books
+content.json
+patchouli_data.json
+repo
+settings.json
