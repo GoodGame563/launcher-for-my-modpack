@@ -19,9 +19,13 @@ class element_git():
         self.progressbar.set(progress)
 
     def start(self) -> Result[None, str]:
-        print(self.save_path)
         if os.path.exists(self.save_path) :
             if self.check_rep_exists():
+                branch_version = self.check_version_branch()
+                if not (branch_version == self.gq):
+                    check_branch = self.checkout_branch()
+                    if check_branch.is_err:
+                        return check_branch
                 return self.pull_repo()  
         else:
             if self.clone_repo().is_err():
@@ -80,3 +84,4 @@ class element_git():
             return(Ok(None))
         except Exception as e:
             return(Err(f"Ошибка при переключении на ветку: {e}"))
+        

@@ -5,3 +5,4 @@ class Settings(BaseModel):
     nick: str
     enable_resource: bool
     enable_custom_settings: bool
+    download_mine: bool

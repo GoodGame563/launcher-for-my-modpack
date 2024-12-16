@@ -25,7 +25,7 @@ setting_path = "settings.json"
 def create_settings() -> Result[None, str]:
     try:
         with open(setting_path, 'w', encoding='utf-8') as file: 
-            file.write(Settings(version='middle',nick=generate_username(1)[0], enable_resource=True, enable_custom_settings=False).json())
+            file.write(Settings(version='middle',nick=generate_username(1)[0], enable_resource=True, enable_custom_settings=False, download_mine=False).json())
         return Ok(None)    
     except Exception as e:
         return Err(f"Ошибка создания файла настроек: {e}")
@@ -96,12 +96,13 @@ class App(customtkinter.CTk):
         self.slider_progressbar_frame = customtkinter.CTkFrame(self, fg_color="transparent")
         self.slider_progressbar_frame.grid(row=4, column=1,columnspan = 4, padx=(20, 0), pady=(0, 0), sticky="nsew")
         self.slider_progressbar_frame.grid_columnconfigure(0, weight=1)
-        self.slider_progressbar_frame.grid_rowconfigure(4, weight=1)
+        self.slider_progressbar_frame.grid_rowconfigure(3, weight=1)
         self.progressbar = customtkinter.CTkProgressBar(self.slider_progressbar_frame)
         self.progressbar.grid(row=1, column=0, padx=(0, 20), pady=(0, 10), sticky="ew")
         self.progressbar_1 = customtkinter.CTkProgressBar(self.slider_progressbar_frame)
         self.progressbar_1.grid(row=2, column=0, padx=(0, 20), pady=(0, 10), sticky="ew")
-        # self.progressbar.grid_remove()
+        self.slider_progressbar_frame.grid_remove()
+
 
     def combobox_callback(self, choice):
         self.settings.version = choice
@@ -118,24 +119,29 @@ class App(customtkinter.CTk):
     def main_button_event(self):
         self.main_button_1.configure(text="Запуск", state="disabled")
         self.settings.nick = self.entry.get()
-        with open("content.json", 'w', encoding='utf-8') as file:
+        with open("settings.json", 'w', encoding='utf-8') as file:
             file.write(self.settings.json())
         Thread(target=self.start_all).start()
         
     def start_all(self):
+        self.slider_progressbar_frame.grid(row=4, column=1,columnspan = 4, padx=(20, 0), pady=(0, 0), sticky="nsew")
         e_g = element_git(self.repo_url, self.repo_path, self.settings.version, self.progressbar)
-        c_mine = class_minecraft(self.settings.nick, self.maincraft_path, self.progressbar_1)
+        c_mine = class_minecraft(self.settings, self.maincraft_path, self.progressbar_1)
         t_download_from_git = Thread(target=e_g.start)
         t_download_minecraft = Thread(target=c_mine.download_minecraft)
-
-        t_download_minecraft.start()
+        if not self.settings.download_mine:
+            t_download_minecraft.start()
         t_download_from_git.start()
         t_download_from_git.join()
         t_transfer = Thread(target=transfer, args=(self.repo_path, self.maincraft_path, self.settings))
         t_transfer.start()
         t_transfer.join()
+        if not self.settings.download_mine:
+            t_download_minecraft.join()
+        self.slider_progressbar_frame.grid_remove()
         c_mine.launch_minecraft()
-       
+        self.main_button_1.configure(text="Play", state="normal")
+        
 
 if __name__ == "__main__":
     app = App()
