@@ -88,8 +88,6 @@ class App(customtkinter.CTk):
         self.checkbox_custom_settings.select() if self.settings.enable_custom_settings else self.checkbox_custom_settings.deselect()
         self.generate_button_1 = customtkinter.CTkButton(master=self.sidebar_frame, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), text='Создать новый ник', command=self.generate_button_event)
         self.generate_button_1.grid(row=5, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
-        # self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, text='Настройки')
-        # self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
 
         self.entry = customtkinter.CTkEntry(self)
         self.entry.grid(row=3, column=1, columnspan=2, padx=(20, 0), pady=(20, 20), sticky="nsew")
