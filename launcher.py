@@ -1,31 +1,34 @@
-import tkinter
 import os
 import customtkinter
+import json
+import sys
 
 from tkinter.messagebox import showerror
-
-import subprocess
-import json
-
 from pydantic import ValidationError
 from git_work import element_git
 from models import Settings
-from random_username.generate import generate_username
 from threading import Thread
 from forge_work import class_minecraft
 from transfer_data import transfer
 from PIL import ImageTk, Image
 from result import Ok, Err, Result, is_ok, is_err
+from pathlib import Path
+from generate_nick import generate
 
 customtkinter.set_appearance_mode("Dark")  
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 current_max = 0
-setting_path = "settings.json"
+setting_path = Path(os.getcwd()) / "settings.json"
+if hasattr(sys, '_MEIPASS'):
+    image_path = os.path.join(sys._MEIPASS, "1.png")
+else:
+    image_path = os.path.join(os.path.abspath('.'), "1.png")
+
 def create_settings() -> Result[None, str]:
     try:
         with open(setting_path, 'w+', encoding='utf-8') as file: 
-            file.write(Settings(version='middle',nick=generate_username(1)[0], enable_resource=True, enable_custom_settings=False, download_mine=False).model_dump_json())
+            file.write(Settings(version='middle',nick=generate(), enable_resource=False, enable_custom_settings=False, download_mine=False).model_dump_json())
         return Ok(None)    
     except Exception as e:
         return Err(f"Ошибка создания файла настроек: {e}")
@@ -33,7 +36,7 @@ def create_settings() -> Result[None, str]:
 def check_settings() -> Result[Settings, str]:
     if not os.path.exists(setting_path):
         if create_settings().is_err():
-            showerror("dasasda", "dasjhdkjas")
+            showerror("dasasda", create_settings().err_value )
     with open(setting_path, 'r', encoding='utf-8') as file:
         try: 
             return Ok(Settings(**json.load(file))) 
@@ -71,7 +74,7 @@ class App(customtkinter.CTk):
 
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=5, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(5, weight=1)
+        self.sidebar_frame.grid_rowconfigure(6, weight=1)
         self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Minecraft", font=customtkinter.CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
         self.combobox = customtkinter.CTkComboBox(self.sidebar_frame, values=self.versions, command=self.combobox_callback)
@@ -83,6 +86,8 @@ class App(customtkinter.CTk):
         self.checkbox_custom_settings.grid(row=3, column=0, padx=20, pady=(0, 10))
         self.checkbox_resource.select() if self.settings.enable_resource else self.checkbox_resource.deselect()
         self.checkbox_custom_settings.select() if self.settings.enable_custom_settings else self.checkbox_custom_settings.deselect()
+        self.generate_button_1 = customtkinter.CTkButton(master=self.sidebar_frame, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), text='Создать новый ник', command=self.generate_button_event)
+        self.generate_button_1.grid(row=5, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
         # self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, text='Настройки')
         # self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
 
@@ -95,7 +100,7 @@ class App(customtkinter.CTk):
 
         self.image_frame = customtkinter.CTkFrame(self, fg_color="transparent")
         self.image_frame.grid(row=0, column=1,columnspan = 3, padx=(20, 20), pady=(20, 0), sticky="nsew")
-        self.bg_image = ImageTk.PhotoImage(Image.open("1.png"))
+        self.bg_image = ImageTk.PhotoImage(Image.open(image_path))
         self.bg_image_label = customtkinter.CTkLabel(self.image_frame, image=self.bg_image, text="")
         self.bg_image_label.pack(fill="both", expand=True)
 
@@ -137,6 +142,12 @@ class App(customtkinter.CTk):
         with open("settings.json", 'w', encoding='utf-8') as file:
             file.write(self.settings.model_dump_json())
         Thread(target=self.start_all).start()
+    def generate_button_event(self):
+        self.settings.nick = generate()
+        self.entry.delete(0, 100000000)
+        self.entry.insert(0, self.settings.nick)
+        with open("settings.json", 'w', encoding='utf-8') as file:
+            file.write(self.settings.model_dump_json())
         
     def start_all(self):
         self.slider_progressbar_frame.grid(row=4, column=1,columnspan = 4, padx=(20, 0), pady=(0, 0), sticky="nsew")
