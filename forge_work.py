@@ -14,8 +14,6 @@ class class_minecraft():
     def set_progress(self, progress: int):
         if self.progressbar is None: 
             return
-        
-        self.progressbar.grid(row=1, column=0, padx=(0, 20), pady=(0, 10), sticky="ew")
         if current_max != 0:
             self.progressbar.set(progress / current_max) 
 
